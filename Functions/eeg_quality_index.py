@@ -9,7 +9,7 @@ import numpy as np
 import scipy.fft as fft
 import scipy.stats as stats
 
-def scoring(clean_eeg, test_eeg, sliding=True, window=None, slide=None):
+def scoring(clean_eeg, test_eeg, srate_clean, srate_test, sliding=True, window=None, slide=None):
     """
         This function computes the EEG Quality index for both the clean_eeg and the test_eeg and returns
         a scoring matrix for the following variables: 
@@ -20,11 +20,56 @@ def scoring(clean_eeg, test_eeg, sliding=True, window=None, slide=None):
         - Zero-crossing rate
         - Kurtosis
 
-        The scores for each variable are determined with the following table
+        The z-scores for each variable are determined with the following table
         - EQI_test <= 1 stdev EQI_clean = 0
-        - 
+        - 1 stdev < EQI_test <= 2 stdev EQI_clean = 1
+        - 2 stdev < EQI_test <= 3 stdev EQI_clean = 2
+        - EQI_test > 3 stdev EQI_clean = 3
+
+        Parameters
+        ----------
+            clean_eeg: array_like
+                EEG array with no artifacts
+            test_eeg: array_like
+                EEG array with artifacts
+            srate: int
+                Sample rate [Hz]
+            sliding: bool (optional)
+                Boolean to calculate sliding window
+                If true, EQI will be calculated for each window
+                If false, EQI will be calculated for the whole EEG data
+            window: int (optional)
+                Number of samples to calculate the sliding window
+                Required if sliding == True
+            slide: int (optional)
+                Number of samples to slide the sliding window for
+                Required if sliding == True
+        
+        Returns
+        -------
+            eqi_mean: array_like
+                2D matrix [EQI, channel] with the mean values for each EQI variable for each channel
 
     """
+    # Run EEG Quality Index on clean and test data
+    eqi_clean = eqi(clean_eeg, srate_clean, sliding=sliding, window=window, slide=slide)
+    eqi_test = eqi(test_eeg, srate_test, sliding=sliding, window=window, slide=slide)
+    a = 0
+
+    # Compute mean and std of clean data
+    n_windows = np.size(eqi_test,2) # Number of windows of test data
+    mean_eqi_clean = np.repeat(np.mean(eqi_clean, axis=2, keepdims=True), n_windows, 2) # Tensor of means per variable and channel
+    std_eqi_clean = np.repeat(np.std(eqi_clean, axis=2, keepdims=True), n_windows, 2)   # Tensor of std per variable and channel
+
+    # Get zscores
+    z_scores = np.zeros_like(eqi_test)  # Preallocate tensor for z_scores
+    z_scores = np.abs(np.ceil((eqi_test-mean_eqi_clean)/std_eqi_clean)) # Calculate z-scores
+    z_scores = np.where(z_scores>3, 3, z_scores)    # Replace z-scores values >3 to = 3
+
+    # EQI average
+    eqi_mean = np.mean(z_scores, 2)
+    
+    return eqi_mean
 
 def eqi(eeg, srate, sliding=True, window=None, slide=None):
     """
@@ -50,7 +95,8 @@ def eqi(eeg, srate, sliding=True, window=None, slide=None):
         Returns
         -------
             eeg_eqi: array_like
-                EEG quality index values. 
+                EEG quality index values in a 3D array. 
+
 
     """
 
@@ -94,6 +140,11 @@ def eqi(eeg, srate, sliding=True, window=None, slide=None):
 
     ## Kurtosis
     eeg_kurtosis = stats.kurtosis(eeg_windowed, axis=1)
+
+    ## Create output tensor
+    eeg_eqi = np.array([mean_ssas, line_ssas, rms, max_grad, eeg_zcr, eeg_kurtosis])
+
+    return eeg_eqi
 
 def sliding_window(data, window, slide):
     """
