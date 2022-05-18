@@ -47,6 +47,10 @@ def scoring(clean_eeg, test_eeg, srate_clean, srate_test, sliding=True, window=N
         
         Returns
         -------
+            clean_total: array_like
+                Percentage of summed windows > 0. Shape will be 1D with length = n_channels
+            clean_percent: array_like
+                Percentage of windows > 0. Shape will be 2D with dimensions [6 x n_channels]
             eqi_mean: array_like
                 2D matrix [EQI, channel] with the mean values for each EQI variable for each channel
 
@@ -54,7 +58,6 @@ def scoring(clean_eeg, test_eeg, srate_clean, srate_test, sliding=True, window=N
     # Run EEG Quality Index on clean and test data
     eqi_clean = eqi(clean_eeg, srate_clean, sliding=sliding, window=window, slide=slide)
     eqi_test = eqi(test_eeg, srate_test, sliding=sliding, window=window, slide=slide)
-    a = 0
 
     # Compute mean and std of clean data
     n_windows = np.size(eqi_test,2) # Number of windows of test data
@@ -63,13 +66,15 @@ def scoring(clean_eeg, test_eeg, srate_clean, srate_test, sliding=True, window=N
 
     # Get zscores
     z_scores = np.zeros_like(eqi_test)  # Preallocate tensor for z_scores
-    z_scores = np.abs(np.ceil((eqi_test-mean_eqi_clean)/std_eqi_clean)) # Calculate z-scores
+    z_scores = np.floor(np.abs((eqi_test-mean_eqi_clean)/std_eqi_clean)) # Calculate z-scores
     z_scores = np.where(z_scores>3, 3, z_scores)    # Replace z-scores values >3 to = 3
 
     # EQI average
-    eqi_mean = np.mean(z_scores, 2)
+    eqi_mean = np.mean(z_scores, 2) 
+    clean_percent = np.mean((z_scores>0).astype(int), 2)*100            # Percentage of windows > 0
+    clean_total = np.mean((np.sum(z_scores,0)>0).astype(int), 1)*100    # Percentage of summed windows > 0
     
-    return eqi_mean
+    return clean_total, clean_percent, eqi_mean
 
 def eqi(eeg, srate, sliding=True, window=None, slide=None):
     """
