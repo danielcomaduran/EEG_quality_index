@@ -69,10 +69,14 @@ def scoring(clean_eeg, test_eeg, srate_clean, srate_test, sliding=True, window=N
     z_scores = np.floor(np.abs((eqi_test-mean_eqi_clean)/std_eqi_clean)) # Calculate z-scores
     z_scores = np.where(z_scores>3, 3, z_scores)    # Replace z-scores values >3 to = 3
 
+    # Print warning
+    if np.any(np.isnan(z_scores)):
+        print("Warning!\nOne or more Z-scores have NaN values\nReview eqi_mean carefully")
+
     # EQI average
-    eqi_mean = np.mean(z_scores, 2) 
-    clean_percent = np.mean((z_scores>0).astype(int), 2)*100            # Percentage of windows > 0
-    clean_total = np.mean((np.sum(z_scores,0)>0).astype(int), 1)*100    # Percentage of summed windows > 0
+    eqi_mean = np.nanmean(z_scores, 2)                                      # EQI Averages
+    clean_percent = np.nanmean((z_scores>0).astype(int), 2)*100             # Percentage of windows > 0
+    clean_total = np.nanmean((np.sum(z_scores,0)>0).astype(int), 1)*100     # Percentage of summed windows > 0
     
     return clean_total, clean_percent, eqi_mean
 
@@ -238,12 +242,6 @@ def zcr(data):
     -----
         - ZCR will have one less dimension than the input data
     """
-
-    data_shape = data.shape
-
-    # Make sure data is in a row matrix
-    if data_shape[0] > data_shape[1]:
-        data = data.T
 
     data_zcr = np.mean(np.diff(np.sign(data), axis=1), axis=1)
 
