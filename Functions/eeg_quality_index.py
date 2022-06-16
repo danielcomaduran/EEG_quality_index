@@ -85,9 +85,9 @@ def scoring(clean_eeg, test_eeg, srate_clean, srate_test, sliding=True, window=N
         print("Warning!\nOne or more Z-scores have NaN values\nReview eqi_mean carefully")
 
     # EQI average
-    eqi_mean = np.mean(z_scores, 2)                                      # EQI Averages
-    clean_percent = np.nanmean((z_scores>0).astype(int), 2)*100             # Percentage of windows > 0
-    clean_total = np.nanmean((np.sum(z_scores,0)>0).astype(int), 1)*100     # Percentage of summed windows > 0
+    eqi_mean = np.mean(z_scores, 2)                                             # EQI Averages
+    clean_percent = 100 - np.nanmean((z_scores>0).astype(int), 2)*100           # Percentage of windows > 0
+    clean_total = 100 - np.nanmean((np.sum(z_scores,0)>0).astype(int), 1)*100   # Percentage of summed windows > 0
     
     return clean_total, clean_percent, eqi_mean
 
