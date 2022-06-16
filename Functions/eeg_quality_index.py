@@ -38,13 +38,14 @@ def scoring(clean_eeg, test_eeg, srate_clean, srate_test, sliding=True, window=N
                 Boolean to calculate sliding window
                 If true, EQI will be calculated for each window
                 If false, EQI will be calculated for the whole EEG data
-            window: int (optional)
+            window: [int] (optional)
                 Number of samples to calculate the sliding window
                 Required if sliding == True
+                Provide list of ints if clean and test have different srates. List should be [windows_clean, window_test]
             slide: int (optional)
                 Number of samples to slide the sliding window for
                 Required if sliding == True
-        
+                Provide list of ints if clean and test have different srates. List should be [sliding_clean, sliding_test]
         Returns
         -------
             clean_total: array_like
@@ -54,10 +55,20 @@ def scoring(clean_eeg, test_eeg, srate_clean, srate_test, sliding=True, window=N
             eqi_mean: array_like
                 2D matrix [EQI, channel] with the mean values for each EQI variable for each channel
 
+        Notes
+        -----
+            - If sample rate of clean and test data is different, you MUST provide a list of windows and slides
+
     """
-    # Run EEG Quality Index on clean and test data
-    eqi_clean = eqi(clean_eeg, srate_clean, sliding=sliding, window=window, slide=slide)
-    eqi_test = eqi(test_eeg, srate_test, sliding=sliding, window=window, slide=slide)
+
+    if srate_clean != srate_test:
+        # Run EEG Quality Index on clean and test data
+        eqi_clean = eqi(clean_eeg, srate_clean, sliding=sliding, window=window[0], slide=slide[0])
+        eqi_test = eqi(test_eeg, srate_test, sliding=sliding, window=window[1], slide=slide[1])
+    else:
+        # Run EEG Quality Index on clean and test data
+        eqi_clean = eqi(clean_eeg, srate_clean, sliding=sliding, window=window, slide=slide)
+        eqi_test = eqi(test_eeg, srate_test, sliding=sliding, window=window, slide=slide)
 
     # Compute mean and std of clean data
     n_windows = np.size(eqi_test,2) # Number of windows of test data
