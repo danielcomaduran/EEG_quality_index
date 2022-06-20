@@ -147,7 +147,7 @@ def eqi(eeg, srate, sliding=True, window=None, slide=None):
     f_mask = np.expand_dims((f>=f_start) & (f<=f_end), axis=0)
     f_mask_tensor = np.expand_dims(f_mask.repeat(ssas_size[0], axis=0), axis=2).repeat(ssas_size[2], axis=2)
 
-    line_ssas = np.mean(ssas, axis=1, where=f_mask_tensor)    # Line noiseMean Single Sided Amplitude Spectrum
+    line_ssas = np.mean(ssas, axis=1, where=f_mask_tensor)    # Line noise Mean Single Sided Amplitude Spectrum
 
     ## RMS Amplitude
     rms = np.sqrt(np.mean(eeg_windowed**2, axis=1)) 
