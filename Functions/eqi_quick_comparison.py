@@ -20,6 +20,7 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 sys.path.append("..") # Adds higher directory to python modules path.
 import eeg_quality_index
+import import_data
 
 #%% Import data
 # - Notes
@@ -34,20 +35,25 @@ data_folder = os.getcwd() + '\\Data\\'  # Change this if needed
 os.chdir(current_directory)
 
 # - Create MNE object from XDF data
-stream = 1  # Select proper stream from XDF file
-trial_name = '\\220621 EKL Gtec\\baseline1.xdf'  # Change this if needed
-print(f'{data_folder+trial_name}')
-streams, header = pyxdf.load_xdf(data_folder+trial_name)
-sfreq = float(streams[stream]['info']['nominal_srate'][0])                  # Sampling frequency [Hz]
-n_chans = len(streams[stream]['info']['desc'][0]['channels'][0]['channel']) # Number of channels [n]
-chans = [streams[stream]['info']['desc'][0]['channels'][0]['channel'][i]['label'][0] for i in range(n_chans)]   # Channel names
-info = mne.create_info(chans, sfreq, ch_types='eeg')
-data = streams[stream]['time_series'].T # EEG data [uV]
-clean = mne.io.RawArray(data*1e-9, info, verbose=False) # Change this variable name if needed
+# stream = 1  # Select proper stream from XDF file
+# trial_name = '\\220621 EKL Gtec\\baseline1.xdf'  # Change this if needed
+# print(f'{data_folder+trial_name}')
+# streams, header = pyxdf.load_xdf(data_folder+trial_name)
+# sfreq = float(streams[stream]['info']['nominal_srate'][0])                  # Sampling frequency [Hz]
+# n_chans = len(streams[stream]['info']['desc'][0]['channels'][0]['channel']) # Number of channels [n]
+# chans = [streams[stream]['info']['desc'][0]['channels'][0]['channel'][i]['label'][0] for i in range(n_chans)]   # Channel names
+# info = mne.create_info(chans, sfreq, ch_types='eeg')
+# data = streams[stream]['time_series'].T # EEG data [uV]
+# clean = mne.io.RawArray(data*1e-9, info, verbose=False) # Change this variable name if needed
 
-# - Import EDF data to MNE object
-trial_name = '\\220607 Baseline Emotiv Flex\\PT_06.07.22_RS_EPOCFLEX_99556_2022.06.07T17.27.25.06.00.edf'   # Change this if needed
-test = mne.io.read_raw_edf(data_folder+trial_name, verbose=False, preload=True)
+# # - Import EDF data to MNE object
+# trial_name = '\\220607 Baseline Emotiv Flex\\PT_06.07.22_RS_EPOCFLEX_99556_2022.06.07T17.27.25.06.00.edf'   # Change this if needed
+# test = mne.io.read_raw_edf(data_folder+trial_name, verbose=False, preload=True)
+
+# - Import open BCI .TXT data
+txt_file = "C:\\Users\\danie\\Documents\\Projects\\EEG_quality_index\\Data\\OpenBCI\\OpenBCI-RAW-2022-07-15_14-23-04.txt"
+openBCI_srate = 125 # [Hz]
+openBCI_eeg = import_data.import_openBCI(txt_file)
 
 #%% Filter data
 # - Select cutoff frequencies for bandpass filter and filter the data
@@ -67,11 +73,11 @@ test.filter(l_freq=fc_low, h_freq=fc_high)
 
 #%% Pick times
 # - Select times to trim the data
-clean_trim_start = 15     # Time to begin trimming [sec]
-clean_trim_end = 45       # Time to stop trimming [sec]
+clean_trim_start = 45     # Time to begin trimming [sec]
+clean_trim_end = 75       # Time to stop trimming [sec]
 
-test_trim_start = 15     # Time to begin trimming [sec]
-test_trim_end = 45       # Time to stop trimming [sec]
+test_trim_start = 45     # Time to begin trimming [sec]
+test_trim_end = 75       # Time to stop trimming [sec]
 
 # - Enable as needed
 clean.crop(tmin=clean_trim_start, tmax=clean_trim_end)
