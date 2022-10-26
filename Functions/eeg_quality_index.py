@@ -1,13 +1,16 @@
 """
     EEG Quality Index
     -----------------
-        These functions are used to quantify the EEG quality index presented in Flicking et al. 2019.
+        These functions are used to quantify and visualize the EEG quality index presented in `Flicking et al. 2019`.
 """
 
 ## Import libraries
 import numpy as np
+import pandas as pd
+import seaborn as sns
 import scipy.fft as fft
 import scipy.stats as stats
+import matplotlib.pyplot as plt
 
 def scoring(clean_eeg, test_eeg, srate_clean, srate_test, sliding=True, window=None, slide=None):
     """
@@ -257,3 +260,44 @@ def zcr(data):
     data_zcr = np.mean(np.diff(np.sign(data), axis=1), axis=1)
 
     return data_zcr
+
+def heatmap(data, chans: list[str], title: str = ""):
+    """
+        Heatmap visualization with mean across channels
+
+        Parameters
+        ----------
+            data: array_like
+                Data matrix to be plotted
+            chans: [str]
+                List of strings with channels to be plotted
+
+        Returns
+        -------
+            f: Figure
+            ax: Axes
+    """
+
+    #%% Plot heatmap
+    sns.set_theme(style="white")
+
+    row_names = ['SSAS$_\mathrm{1-50 Hz}$', 'SASS$_\mathrm{60 Hz}$', 'RMS', 'Grad$_\mathrm{max}$', 'ZCR', 'Kurtosis']
+    column_names = chans + ['Mean']
+
+    # Generate a large random dataset
+    plot_df = pd.DataFrame(data=np.concatenate((data, np.mean(data,1,keepdims=True)), axis=1), 
+                                columns=column_names, index=row_names)
+
+    # Set up the matplotlib figure
+    f, ax = plt.subplots()
+
+    # Generate a custom diverging colormap
+    cmap1 = sns.diverging_palette(230, 20, as_cmap=True)
+
+    # Draw the heatmap
+    sns.heatmap(plot_df, cmap=cmap1, vmax=100, center=0, square=True, linewidths=.5, cbar_kws={"shrink": .5}, ax=ax)
+    ax.set_title(title)
+    plt.tight_layout()
+    plt.show()
+
+    return f, ax

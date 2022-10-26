@@ -35,20 +35,20 @@ data_folder = os.getcwd() + '\\Data\\'  # Change this if needed
 os.chdir(current_directory)
 
 # - Create MNE object from XDF data
-# stream = 1  # Select proper stream from XDF file
-# trial_name = '\\220621 EKL Gtec\\baseline1.xdf'  # Change this if needed
-# print(f'{data_folder+trial_name}')
-# streams, header = pyxdf.load_xdf(data_folder+trial_name)
-# sfreq = float(streams[stream]['info']['nominal_srate'][0])                  # Sampling frequency [Hz]
-# n_chans = len(streams[stream]['info']['desc'][0]['channels'][0]['channel']) # Number of channels [n]
-# chans = [streams[stream]['info']['desc'][0]['channels'][0]['channel'][i]['label'][0] for i in range(n_chans)]   # Channel names
-# info = mne.create_info(chans, sfreq, ch_types='eeg')
-# data = streams[stream]['time_series'].T # EEG data [uV]
-# clean = mne.io.RawArray(data*1e-9, info, verbose=False) # Change this variable name if needed
+stream = 1  # Select proper stream from XDF file
+trial_name = '\\220621 EKL Gtec\\baseline1.xdf'  # Change this if needed
+print(f'{data_folder+trial_name}')
+streams, header = pyxdf.load_xdf(data_folder+trial_name)
+sfreq = float(streams[stream]['info']['nominal_srate'][0])                  # Sampling frequency [Hz]
+n_chans = len(streams[stream]['info']['desc'][0]['channels'][0]['channel']) # Number of channels [n]
+chans = [streams[stream]['info']['desc'][0]['channels'][0]['channel'][i]['label'][0] for i in range(n_chans)]   # Channel names
+info = mne.create_info(chans, sfreq, ch_types='eeg')
+data = streams[stream]['time_series'].T # EEG data [uV]
+clean = mne.io.RawArray(data*1e-9, info, verbose=False) # Change this variable name if needed
 
-# # - Import EDF data to MNE object
-# trial_name = '\\220607 Baseline Emotiv Flex\\PT_06.07.22_RS_EPOCFLEX_99556_2022.06.07T17.27.25.06.00.edf'   # Change this if needed
-# test = mne.io.read_raw_edf(data_folder+trial_name, verbose=False, preload=True)
+# - Import EDF data to MNE object
+trial_name = '\\220607 Baseline Emotiv Flex\\PT_06.07.22_RS_EPOCFLEX_99556_2022.06.07T17.27.25.06.00.edf'   # Change this if needed
+test = mne.io.read_raw_edf(data_folder+trial_name, verbose=False, preload=True)
 
 # - Import open BCI .TXT data
 txt_file = "C:\\Users\\danie\\Documents\\Projects\\EEG_quality_index\\Data\\OpenBCI\\OpenBCI-RAW-2022-07-15_14-23-04.txt"
@@ -135,23 +135,5 @@ slide = [slide_clean, slide_test]
                                                         slide=slide)
 
 #%% Plot heatmap
-sns.set_theme(style="white")
-
-row_names = ['$SSAS_{1-50 Hz}$', '$SASS_{60 Hz}$', 'RMS', '$Grad_{max}$', 'ZCR', 'Kurtosis']
-column_names = pick_clean_chans + ['Mean']
-
-# Generate a large random dataset
-percent_df = pd.DataFrame(data=np.concatenate((percent, np.mean(percent,1,keepdims=True)), axis=1), 
-                            columns=column_names, index=row_names)
-
-# Set up the matplotlib figure
-f, ax = plt.subplots()
-
-# Generate a custom diverging colormap
-cmap1 = sns.diverging_palette(230, 20, as_cmap=True)
-
-# Draw the heatmap
-sns.heatmap(percent_df, cmap=cmap1, vmax=100, center=0, square=True, linewidths=.5, cbar_kws={"shrink": .5}, ax=ax)
-ax.set_title('EEG Quality Index\nBaseline (raw) vs Clean (eyes open)')
-plt.tight_layout()
-plt.show()
+title = "EEG Quality Index\nBaseline (raw) vs Clean (eyes open)"
+f, ax = eeg_quality_index.heatmap(percent, pick_clean_chans, title)
