@@ -269,8 +269,10 @@ def heatmap(data, chans: list[str], title: str = ""):
         ----------
             data: array_like
                 Data matrix to be plotted
-            chans: [str]
+            chans: list[str]
                 List of strings with channels to be plotted
+            title: str
+                Optional. title of the figure
 
         Returns
         -------
