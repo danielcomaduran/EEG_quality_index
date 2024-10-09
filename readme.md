@@ -7,4 +7,4 @@ This repository is an implementation of the paper [Good data? The EEG Quality In
 
 ## Notes
 --------
-- Install the necesary Python libraries using the [eeg_quality.yml](./eeg_quality.yml) file.
+- To use the tool, install the necesary Python libraries using the [eeg_quality.yml](./eeg_quality.yml) file.
