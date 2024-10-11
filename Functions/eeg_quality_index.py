@@ -9,6 +9,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import scipy.fft as fft
+from typing import Union
+from typing import List
+from typing import Tuple
 import scipy.stats as stats
 import matplotlib.pyplot as plt
 
@@ -18,10 +21,10 @@ class EEGQualityIndex:
         clean_eeg:np.ndarray,
         test_eeg:np.ndarray,
         srate_clean:float,
-        srate_test:float | None,
+        srate_test:Union[float, None] = None,
         sliding:bool = True,
-        window:int | list[int] | None = None,
-        slide:int | list[int] | None = None):
+        window:Union[int, List[int], None] = None,
+        slide:Union[int, List[int], None] = None):
         """
             EEG Quality Index class to compute the EEG quality index for clean and test EEG data.
             The implementation of this tool is fully described in 
@@ -94,10 +97,10 @@ class EEGQualityIndex:
         self._slide = self._validate_window_slide(value, "slide")
 
     # Public methods
-    def scoring(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def compute_zscores(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
             This function computes the EEG Quality index for both the clean_eeg and the test_eeg and returns
-            a scoring matrix for the following variables: 
+            a z-scoring matrix for the following variables: 
             - Average single-sided amplitude spectrum (1-50 Hz)
             - Line noise single-sided amplitude spectrum (59-61 Hz)
             - RMS amplitude
@@ -181,8 +184,8 @@ class EEGQualityIndex:
         eeg:np.ndarray,
         srate:float,
         sliding:bool = True,
-        window:int | list[int] | None = None,
-        slide:int | list[int] | None = None):
+        window:Union[int, List[int], None] = None,
+        slide:Union[int, List[int], None] = None):
         """
             This function calculates the EEG Quality index Z-score and returns all metrics in a 2D array
 
@@ -214,7 +217,7 @@ class EEGQualityIndex:
             eeg_windowed = self._sliding_window(eeg, window, slide)
 
         ## Compute single-sided amplitude spectrum
-        [ssas, f] = self._single_amplitude_spectrum(eeg_windowed, srate, n=srate) # Compute FFT for a 1 sec window
+        [ssas, f] = self._single_amplitude_spectrum(eeg_windowed, srate, n=int(srate)) # Compute FFT for a 1 sec window
         ssas_size = ssas.shape
 
         # - Compute average
@@ -250,14 +253,18 @@ class EEGQualityIndex:
 
         return eeg_eqi
 
-    def heatmap(self, data, chans: list[str], title: str = ""):
+    def heatmap(
+        self,
+        data:Union[np.ndarray, None] = None,
+        chans:List[str] = [""],
+        title:str = ""):
         """
             Heatmap visualization with mean across channels
 
             Parameters
             ----------
-                data: array_like
-                    Data matrix to be plotted
+                data: array_like (optional)
+                    Data matrix to be plotted. If no data is provided, the EQI mean matrix will be plotted
                 chans: list[str]
                     List of strings with channels to be plotted
                 title: str
@@ -268,6 +275,8 @@ class EEGQualityIndex:
                 f: Figure
                 ax: Axes
         """
+        if data == None:
+            data = self.eqi_mean
 
         #%% Plot heatmap
         sns.set_theme(style="white")
@@ -332,7 +341,7 @@ class EEGQualityIndex:
         
         return data_windowed
 
-    def _single_amplitude_spectrum(eeg, srate, n):
+    def _single_amplitude_spectrum(self, eeg, srate, n):
         """
             This function calculates the single-sided amplitude spectrum in a column-wise fashion
 
@@ -362,7 +371,7 @@ class EEGQualityIndex:
 
         return single_fft, f
 
-    def _zero_crossing_rate(data):
+    def _zero_crossing_rate(self, data):
         """
             Compute the zero-crossing rate (ZCR) of the input data along the columns
 
