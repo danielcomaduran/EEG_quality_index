@@ -97,7 +97,7 @@ class EEGQualityIndex:
         self._slide = self._validate_window_slide(value, "slide")
 
     # Public methods
-    def scoring(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def compute_zscores(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
             This function computes the EEG Quality index for both the clean_eeg and the test_eeg and returns
             a z-scoring matrix for the following variables: 
